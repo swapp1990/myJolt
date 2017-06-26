@@ -14,8 +14,9 @@ import {Card} from "./models/card";
         <search-bar (onSubmit)="onSearchText($event)"></search-bar>
         <button type="button" (click)="prevClick()">Prev</button>
         <button type="button" (click)="nextClick()">Next</button>
+        <button type="button" (click)="showFavs()">Favorites ({{favCount}})</button>
         <span *ngFor="let card of cardsShown">
-            <card [cardData]="card"></card>
+            <card [cardData]="card" (favAdded)="onFavAdd()"></card>
         </span>
       </div>
     </div>
@@ -49,12 +50,28 @@ export class AppComponent implements AfterViewInit{
   private allPeople: People[] = [];
   private cardsShown: Card[] = [];
   private currentPage: number = 1;
+  private favIds: any[] = [];
+  private favCount: number = 0;
+  
   constructor(private starWarsService: StarWarsService) {
     
   }
 
   ngAfterViewInit(): void {
-    this.getPeople(1);
+    this.init();
+  }
+
+  init() {
+    this.starWarsService.getFavorites().subscribe (
+        (data) => {
+          this.favIds = data;
+          this.favCount = this.favIds.length;
+          this.getPeople(this.currentPage);
+        },
+        err => {
+          console.log(err);
+        }
+    );
   }
 
   getPeople(currentPage: number): void {
@@ -73,7 +90,8 @@ export class AppComponent implements AfterViewInit{
   updateCards(): void {
     this.cardsShown = [];
     this.allPeople.forEach((people: People) => {
-      this.cardsShown.push(new Card(people, null));
+      let result = this.favIds.find(x => x.id == people.id);
+      this.cardsShown.push(new Card(people, result));
     });
   }
 
@@ -95,5 +113,9 @@ export class AppComponent implements AfterViewInit{
   nextClick() {
     this.currentPage++;
     this.getPeople(this.currentPage);
+  }
+
+  onFavAdd() {
+    this.init();
   }
 }

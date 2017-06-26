@@ -35,6 +35,45 @@ export class StarWarsService {
             .catch((err) => this.handleError(err));
     }
 
+
+    getFavorites(): Observable<any> {
+        let finalUrl = `http://localhost:3008/peoplefavorites`;
+        return this.http
+            .get(finalUrl)
+            .map((res) => this.extractData(res))
+            .catch((err) => this.handleError(err));
+    }
+
+    updateCurrentPerson(people: People) {
+        let headers = new Headers({
+            'Content-Type': 'application/json'
+        });
+
+        let finalUrl = this.peopleUrl + '/' + people.id;
+        return this.http
+            .patch(finalUrl, JSON.stringify(people), { headers: headers })
+            .map((response: Response) => response.json());
+    }
+
+    postFavorite(peopleId: any) {
+        let headers = new Headers({
+            'Content-Type': 'application/json'
+        });
+
+        let finalUrl = `http://localhost:3008/peoplefavorites`;
+        return this.http
+            .post(finalUrl, JSON.stringify(peopleId), { headers: headers })
+            .map((response: Response) => response.json());
+    }
+
+    private getCount(res: Response) {
+        if (res.status < 200 || res.status >= 300) {
+            throw new Error('Bad response status: ' + res.status);
+        }
+        let body: any = res.json();
+        return body.length;
+    }
+
     private extractData(res: Response) {
         if (res.status < 200 || res.status >= 300) {
             throw new Error('Bad response status: ' + res.status);

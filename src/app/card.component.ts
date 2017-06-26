@@ -1,4 +1,4 @@
-import {Component, AfterViewInit, Input} from "@angular/core";
+import {Component, AfterViewInit, Input, Output, EventEmitter} from "@angular/core";
 import {StarWarsService} from "./services/starwars.service";
 import {People} from "./models/people";
 import {Card} from "./models/card";
@@ -48,7 +48,10 @@ import {Card} from "./models/card";
   template: `
     <div class="card">
       <div class="card-content">
-        <div class="card-name">{{cardData.name}}</div>
+        <input class="card-name" type="text" [(ngModel)]="cardData.name">
+        <a (click)="addFav()"><i *ngIf="!cardData.isFav" class="material-icons" style="cursor: hand">favorite</i></a>
+        <i *ngIf="cardData.isFav" class="material-icons" style="color: red; cursor: hand">favorite</i>
+        
         <img src="{{cardData.image}}" alt="profile"/>
         <p>
           <span>Birthday:</span>
@@ -59,15 +62,52 @@ import {Card} from "./models/card";
           <span>Homeworld:</span>
           <span>Tatooine</span>
         </p>
+        <button (click)="update()">Update</button>
       </div>
     </div>
   `
 })
 export class CardComponent implements AfterViewInit{
   @Input() cardData: Card;
+  @Output() favAdded = new EventEmitter();
 
   constructor(private starWarsService: StarWarsService) {
 
+  }
+
+  update() {
+    let people: People = this.cardData.people;
+    people.name = this.cardData.name;
+    this.updatePeople(people);
+  }
+
+  addFav() {
+    this.addToFavorite(this.cardData.people);
+  }
+
+  updatePeople(people: People) {
+    this.starWarsService.updateCurrentPerson(people).subscribe(
+        (result: any) => {
+          console.log("Update Succesful");
+        },
+        err => {
+          console.log(err);
+        }
+      );
+  }
+
+  addToFavorite(people: People) {
+    let peopleFavorited: any = {id : people.id};
+    this.starWarsService.postFavorite(peopleFavorited).subscribe(
+        (result: any) => {
+          console.log("favorite added");
+          this.cardData.isFav = true;
+          this.favAdded.emit();
+        },
+        err => {
+          console.log(err);
+        }
+    );
   }
 
   ngAfterViewInit(): void {
