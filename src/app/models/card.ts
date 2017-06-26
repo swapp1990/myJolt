@@ -5,15 +5,18 @@ export class Card {
     name: string;
     birthdate: string;
     image: string;
-    homeworld: string;
+    planetName: string;
     isFav: boolean;
     people: People;
 
-    constructor(people: People, isFav: any) {
+    constructor(people: People, planet: Planet, isFav: any) {
         this.name = people.name;
         this.birthdate = people.birth_year;
         this.image = "http://localhost:3008/" + people.image;
         this.people = people;
+        if(planet) {
+            this.planetName = planet.name;
+        }
         if(isFav) {
             this.isFav = true;
         }

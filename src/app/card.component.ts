@@ -60,7 +60,7 @@ import {Card} from "./models/card";
         <p>
           <!-- Note that in order to get the homeworld's name, you have to get the planet name from a different endpoint than the people -->
           <span>Homeworld:</span>
-          <span>Tatooine</span>
+          <span>{{cardData.planetName}}</span>
         </p>
         <button (click)="update()">Update</button>
       </div>
@@ -111,13 +111,6 @@ export class CardComponent implements AfterViewInit{
   }
 
   ngAfterViewInit(): void {
-    // this.starWarsService.getPeopleData().subscribe (
-    //     (data: People[]) => {
-    //       console.log(data);
-    //     },
-    //     err => {
-    //       console.log(err);
-    //     }
-    // );
+ 
   }
 }

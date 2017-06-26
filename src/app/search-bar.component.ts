@@ -1,4 +1,4 @@
-import { Component,Output,EventEmitter } from '@angular/core';
+import { Component,Input,Output,EventEmitter } from '@angular/core';
 import {People} from "./models/people";
 import {StarWarsService} from "./services/starwars.service";
 
@@ -7,7 +7,7 @@ import {StarWarsService} from "./services/starwars.service";
   styles: [`
     .search-bar{
       text-align: center;
-      margin: 20px;
+      margin: 20px 20px 5px 20px;
     }
 
     .search-bar input:focus{
@@ -25,30 +25,42 @@ import {StarWarsService} from "./services/starwars.service";
   `],
   template: `
     <div class="search-bar">
-      <input #input placeholder="Search Your Destiny" />
-      <button type="submit" (click)="submit(input.value)">Submit</button>
+      <input #input placeholder="Search Your Destiny" [(ngModel)]="search"/>
+      <button type="submit" (click)="submit()">Submit</button>
     </div>
   `
 })
 export class SearchBarComponent {
   private allPeople: People[] = [];
+  @Input() search: string = "";
   @Output() onSubmit = new EventEmitter();
 
   constructor(private starWarsService: StarWarsService) {
 
   }
 
-  submit(value: string) {
-    this.getPeople(value);
+  submit() {
+    if(this.search != "") {
+        this.getPeople(this.search);
+    } else {
+        this.onSubmit.emit();
+    }
   }
 
   getPeople(searchText: string): void {
     this.starWarsService.getPeopleDateOnSearch(searchText).subscribe (
-        (data: People[]) => {
-          //console.log(data);
-          this.allPeople = data;
-          this.onSubmit.emit(this.allPeople);
-          //this.updateCards();
+        (data: any) => {
+          if(data[0].length > 0) {
+              this.starWarsService.getPeopleWithGivenPlanetId(data[0][0].id).subscribe(
+                  (peopleData) => {
+                      this.allPeople = peopleData;
+                      this.onSubmit.emit(this.allPeople);
+                  }
+              );
+          } else {
+              this.allPeople = data[1];
+              this.onSubmit.emit(this.allPeople);
+          }
         },
         err => {
           console.log(err);

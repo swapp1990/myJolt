@@ -4,13 +4,16 @@ import {Observable} from "rxjs/Rx";
 import 'rxjs/add/operator/map';
 import "rxjs/add/operator/catch";
 import 'rxjs/add/operator/toPromise';
+import 'rxjs/add/observable/forkJoin';
 import {People} from "../models/people";
+import {Planet} from "../models/planet";
 
 @Injectable()
 export class StarWarsService {
     private page = 1;
     private limit = 10;
     private peopleUrl = 'http://localhost:3008' +'/people';
+    private planetsUrl = 'http://localhost:3008' +'/planets';
 
     constructor(private http: Http) { }
 
@@ -25,10 +28,82 @@ export class StarWarsService {
             .catch((err) => this.handleError(err));
     }
 
+    getPeopleWithGivenPlanetId(planetId: number):  Observable<People[]> {
+        let finalUrl = this.peopleUrl + '?homeworld=' + planetId;
+        return this.http
+            .get(finalUrl)
+            .map((res) => this.extractData(res))
+            .catch((err) => this.handleError(err));
+    }
+
+    getPeopleWithGivenId(peopleId: any): Observable<People[]> {
+        let finalUrl = this.peopleUrl + '?id=' + peopleId.id;
+        return this.http
+            .get(finalUrl)
+            .map((res) => this.extractData(res))
+            .catch((err) => this.handleError(err));
+    }
+
+    getPlanetsData(): Observable<Planet[]> {
+        let finalUrl = this.planetsUrl;
+        return this.http
+            .get(finalUrl)
+            .map((res) => this.extractData(res))
+            .catch((err) => this.handleError(err));
+    }
+
     //
-    getPeopleDateOnSearch(searchText: string): Observable<People[]> {
+    getPeopleDateOnSearch(searchText: string): Observable<any> {
+        let foundPeople: People[] = [];
+
+        let argsUrl = '?q=' + searchText;
+        let finalUrl = this.planetsUrl + argsUrl;
+        let firstSearch = this.http.get(finalUrl).map((res) => res.json());
+        finalUrl = this.peopleUrl + argsUrl;
+        let secondSearch = this.http.get(finalUrl).map((res) => res.json());
+
+        return Observable.forkJoin([firstSearch, secondSearch]);
+        // //First search for planets if matched and add people belonging to the planet
+        // this.getPlanetsOnSearch(searchText).subscribe(
+        //     (data) => {
+        //         if(data) {
+        //             data.forEach(planet => {
+        //                 this.getPeopleWithGivenPlanetId(planet.id).subscribe(
+        //                     (peopleData) => {
+        //                         peopleData.forEach(people => foundPeople.push(people));
+        //                     }
+        //                 );
+        //             });
+        //         }
+        //
+        //         //Then search for people names to match the search text
+        //         this.getPeoplesOnSearch(searchText).subscribe(
+        //             (data) => {
+        //                 data.forEach(people => {
+        //                     foundPeople.push(people);
+        //                 });
+        //             }
+        //         );
+        //     }
+        // );
+
+        //return Observable.
+    }
+
+    getPeoplesOnSearch(searchText: string): Observable<any> {
         let argsUrl = '?q=' + searchText;
         let finalUrl = this.peopleUrl + argsUrl;
+
+        return this.http
+            .get(finalUrl)
+            .map((res) => this.extractData(res))
+            .catch((err) => this.handleError(err));
+    }
+
+    getPlanetsOnSearch(searchText: string): Observable<any> {
+        let argsUrl = '?q=' + searchText;
+        let finalUrl = this.planetsUrl + argsUrl;
+
         return this.http
             .get(finalUrl)
             .map((res) => this.extractData(res))
